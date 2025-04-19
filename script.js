@@ -1,22 +1,29 @@
+import {
+  getDocs,
+  collection
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 export function startApp(db) {
   let songLibrary = [];
   let filteredSongs = [];
   const itemsPerPage = 10;
   let currentPage = 1;
 
-  async function fetchSongsFromFirestore() {
-    const querySnapshot = await getDocs(collection(db, "songs"));
-    songLibrary = querySnapshot.docs.map(doc => {
-	  const data = doc.data();
-	  return {
-		name: data.name || "無名歌曲",
-		singer: data.singer || "未知歌手",
-		picked: data.picked || false
-	  };
-});
-    filteredSongs = [...songLibrary];
-    renderLibrary();
-  }
+	  async function fetchSongs() {
+	  const querySnapshot = await getDocs(collection(db, "songs"));
+	  songLibrary = []; // 清空重建
+
+	  querySnapshot.forEach((doc) => {
+		const data = doc.data();
+		songLibrary.push({
+		  name: data.song || data.name || "(無歌名)",
+		  singer: data.singer || "(未知歌手)",
+		  picked: data.picked === true
+		});
+	  });
+
+	  filteredSongs = [...songLibrary]; // 初始化搜尋用陣列
+	  renderLibrary(); // ✅ 顯示在 #songLibrary（左邊）
+}
 
   function renderLibrary() {
     const songLibraryDiv = document.getElementById("songLibrary");
@@ -33,6 +40,7 @@ export function startApp(db) {
       const info = document.createElement("div");
       info.className = "song-info";
       info.innerHTML = `<strong>${song.name}</strong> - ${song.singer}`;
+	  
 
       const button = document.createElement("button");
       button.textContent = "點歌";
@@ -65,7 +73,7 @@ export function startApp(db) {
     const songList = document.getElementById("songList");
     const div = document.createElement("div");
     div.className = "song";
-    div.innerHTML = `<strong>${song.name}</strong> - ${song.artist}`;
+    div.innerHTML = `<strong>${song.name}</strong> - ${song.singer}`;
     songList.appendChild(div);
   }
 
@@ -86,5 +94,5 @@ export function startApp(db) {
   document.getElementById("searchInput").addEventListener("input", searchSongs);
 
   // 初始化資料
-  fetchSongsFromFirestore();
+  fetchSongs();
 }
