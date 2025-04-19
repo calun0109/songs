@@ -1,30 +1,47 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>柒柒柒兒的點歌系統</title>
-    <!-- 引入外部 CSS -->
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>柒柒柒兒的點歌系統</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { startApp } from "./script.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlivacWx-Uc0TPsSWQTCl9-2CzdiSzYk8",
+      authDomain: "songlist-ffac3.firebaseapp.com",
+      projectId: "songlist-ffac3",
+      storageBucket: "songlist-ffac3.firebasestorage.app",
+      messagingSenderId: "1071062553304",
+      appId: "1:1071062553304:web:a10849a4a2a88d373cbdad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    startApp(db);
+  </script>
 </head>
 <body>
-    <header>🎶 柒柒柒兒的點歌牆 🎶</header>
+  <header>🎶 柒柒柒兒的點歌牆 🎶</header>
 
   <div class="container">
     <!-- 左邊：歌庫 -->
     <div class="form-section">
       <h2>🎼 歌庫清單（每頁10首）</h2>
 
-      <!-- 搜尋框 -->
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="搜尋歌曲..." oninput="searchSongs()">
-        <button onclick="searchSongs()">搜尋</button>
+        <input type="text" id="searchInput" placeholder="搜尋歌曲...">
+        <button id="searchBtn">搜尋</button>
       </div>
 
       <div id="songLibrary"></div>
       <div class="pagination">
-        <button onclick="prevPage()" id="prevBtn">⬅️ 上一頁</button>
-        <button onclick="nextPage()" id="nextBtn">➡️ 下一頁</button>
+        <button id="prevBtn">⬅️ 上一頁</button>
+        <button id="nextBtn">➡️ 下一頁</button>
       </div>
     </div>
 
@@ -34,6 +51,5 @@
       <div id="songList"></div>
     </div>
   </div>
-    <script src="script.js"></script>
 </body>
 </html>
