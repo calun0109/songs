@@ -2,10 +2,11 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>柒柒柒兒後台登入</title>
+  <title>柒柒柒兒後台管理</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Patrick Hand', cursive;
       background: #fff0f6;
       padding: 40px;
     }
@@ -13,7 +14,6 @@
       color: #c9184a;
     }
     input {
-      display: block;
       margin-bottom: 15px;
       padding: 10px;
       width: 300px;
@@ -21,29 +21,66 @@
       border: 1px solid #ccc;
     }
     button {
-      padding: 10px 20px;
+      padding: 8px 16px;
       border: none;
       background: #ff70a6;
       color: white;
       border-radius: 6px;
       cursor: pointer;
+      font-family: 'Patrick Hand', cursive;
     }
     button:hover {
       background: #c9184a;
     }
-    .success {
-      color: green;
-      margin-top: 10px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ffc8dd;
+      text-align: center;
+      position: relative;
+      height: 40px;
+      max-width: 200px;
+      overflow: hidden;
+    }
+    td input {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      height: 28px;
+      box-sizing: border-box;
+      padding: 4px 8px;
+      font-size: 16px;
+      font-family: 'Patrick Hand', cursive;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .hidden { display: none; }
+    .success { color: green; margin-top: 10px; }
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
     }
   </style>
-  <!-- Firebase v9 CDN with compat (for compatibility mode) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>🔐 管理者登入</h1>
-
+  <h1>🔐 管理者後台</h1>
+  <div class="logout-btn">
+    <button onclick="logout()">登出</button>
+  </div>
   <div id="loginArea">
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Password" required />
@@ -51,15 +88,33 @@
     <div id="loginError" style="color: red;"></div>
   </div>
 
-  <div id="adminArea" style="display: none;">
+  <div id="adminArea" class="hidden">
     <h2>🎵 新增歌曲</h2>
     <form id="addSongForm">
       <input type="text" id="newSong" placeholder="輸入歌名" required />
       <input type="text" id="newSinger" placeholder="輸入歌手" required />
+      <input type="text" id="newLang" placeholder="輸入語言（例如：中文、英文）" required />
       <button type="submit">新增歌曲</button>
     </form>
     <div id="message" class="success"></div>
-    <button onclick="logout()">登出</button>
+
+    <h2>🛠️ 歌曲管理</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>歌名</th>
+          <th>歌手</th>
+          <th>語言</th>
+          <th>點播次數</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="adminSongList"></tbody>
+    </table>
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="prevPage" onclick="changePage(-1)">⬅️ 上一頁</button>
+      <button id="nextPage" onclick="changePage(1)">➡️ 下一頁</button>
+    </div>
   </div>
 
   <script>
@@ -76,60 +131,157 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 自動判斷登入狀態
+    let allSongs = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
     auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginArea").style.display = "none";
-        document.getElementById("adminArea").style.display = "block";
-      } else {
-        document.getElementById("loginArea").style.display = "block";
-        document.getElementById("adminArea").style.display = "none";
-      }
+      document.getElementById("loginArea").style.display = user ? "none" : "block";
+      document.getElementById("adminArea").style.display = user ? "block" : "none";
+      if (user) loadSongs();
     });
 
-    // 登入功能
     function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const errorDiv = document.getElementById("loginError");
-
       auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          errorDiv.textContent = "";
-        })
-        .catch((error) => {
-          errorDiv.textContent = "❌ 登入失敗：" + error.message;
-        });
+        .then(() => document.getElementById("loginError").textContent = "")
+        .catch(error => document.getElementById("loginError").textContent = "❌ 登入失敗：" + error.message);
     }
 
-    // 登出功能
-    function logout() {
-      auth.signOut();
-    }
+    function logout() { auth.signOut(); }
 
-    // 新增歌曲
     document.getElementById("addSongForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const songName = document.getElementById("newSong").value.trim();
       const singerName = document.getElementById("newSinger").value.trim();
+      const songLang = document.getElementById("newLang").value.trim();
       const message = document.getElementById("message");
 
-      if (songName && singerName) {
+      if (songName && singerName && songLang) {
         try {
+          // 檢查是否已有相同歌名與歌手
+          const dupCheck = await db.collection("songs")
+            .where("song", "==", songName)
+            .where("singer", "==", singerName)
+            .get();
+
+          if (!dupCheck.empty) {
+            message.textContent = "⚠️ 已存在相同歌名與歌手的歌曲，請勿重複新增！";
+            return;
+          }
+
           await db.collection("songs").add({
             song: songName,
             singer: singerName,
+            lang: songLang,
+            count: 0,
             picked: false
           });
-          message.textContent = `✅ 成功新增：${songName} - ${singerName}`;
+          message.textContent = `✅ 成功新增：${songName} - ${singerName}（${songLang}）`;
           document.getElementById("addSongForm").reset();
+          loadSongs();
         } catch (error) {
           message.textContent = "❌ 錯誤：" + error.message;
         }
-      } else {
-        message.textContent = "⚠️ 請輸入完整資料";
       }
     });
+
+    async function loadSongs() {
+      const snapshot = await db.collection("songs").get();
+      allSongs = [];
+      snapshot.forEach(doc => {
+        allSongs.push({ id: doc.id, ...doc.data() });
+      });
+      renderPage();
+    }
+
+    function renderPage() {
+      const list = document.getElementById("adminSongList");
+      list.innerHTML = "";
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = allSongs.slice(start, end);
+
+      pageItems.forEach(song => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span>${song.song}</span><input type="text" value="${song.song}" class="hidden"></td>
+          <td><span>${song.singer}</span><input type="text" value="${song.singer}" class="hidden"></td>
+          <td><span>${song.lang}</span><input type="text" value="${song.lang}" class="hidden"></td>
+          <td><span>${song.count}</span><input type="number" value="${song.count}" class="hidden"></td>
+          <td>
+            <button onclick="editRow(this)">✏️</button>
+            <button onclick="deleteRow('${song.id}')">🗑️</button>
+            <button class="hidden" onclick="saveRow(this, '${song.id}')">✅</button>
+            <button class="hidden" onclick="cancelEdit(this)">❌</button>
+          </td>
+        `;
+        list.appendChild(tr);
+      });
+
+      document.getElementById("prevPage").disabled = currentPage === 1;
+      document.getElementById("nextPage").disabled = end >= allSongs.length;
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      renderPage();
+    }
+
+    function editRow(btn) {
+      const tdList = btn.parentNode.parentNode.querySelectorAll("td");
+      tdList.forEach(td => {
+        const span = td.querySelector("span");
+        const input = td.querySelector("input");
+        if (span && input) {
+          span.classList.add("hidden");
+          input.classList.remove("hidden");
+        }
+      });
+      toggleButtons(btn, true);
+    }
+
+    function cancelEdit(btn) {
+      const tdList = btn.parentNode.parentNode.querySelectorAll("td");
+      tdList.forEach(td => {
+        const span = td.querySelector("span");
+        const input = td.querySelector("input");
+        if (span && input) {
+          input.value = span.textContent;
+          span.classList.remove("hidden");
+          input.classList.add("hidden");
+        }
+      });
+      toggleButtons(btn, false);
+    }
+
+    async function saveRow(btn, docId) {
+      const tdList = btn.parentNode.parentNode.querySelectorAll("td");
+      const updatedData = {};
+      ["song", "singer", "lang", "count"].forEach((key, i) => {
+        const input = tdList[i].querySelector("input");
+        updatedData[key] = key === "count" ? parseInt(input.value) : input.value;
+      });
+      await db.collection("songs").doc(docId).update(updatedData);
+      loadSongs();
+    }
+
+    async function deleteRow(docId) {
+      if (confirm("確定要刪除這首歌嗎？")) {
+        await db.collection("songs").doc(docId).delete();
+        loadSongs();
+      }
+    }
+
+    function toggleButtons(button, editing) {
+      const td = button.parentNode;
+      const buttons = td.querySelectorAll("button");
+      buttons[0].classList.toggle("hidden", editing);
+      buttons[1].classList.toggle("hidden", editing);
+      buttons[2].classList.toggle("hidden", !editing);
+      buttons[3].classList.toggle("hidden", !editing);
+    }
   </script>
 </body>
 </html>

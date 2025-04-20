@@ -5,27 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>柒柒柒兒的點歌系統</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Firebase CDN -->
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-  import { startApp } from "./script.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAlivacWx-Uc0TPsSWQTCl9-2CzdiSzYk8",
-    authDomain: "songlist-ffac3.firebaseapp.com",
-    projectId: "songlist-ffac3",
-    storageBucket: "songlist-ffac3.firebasestorage.app",
-    messagingSenderId: "1071062553304",
-    appId: "1:1071062553304:web:a10849a4a2a88d373cbdad"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  startApp(db); // ✅ 正確呼叫主程式
-</script>
-
 </head>
 <body>
   <header>🎶 柒柒柒兒的點歌牆 🎶</header>
@@ -33,14 +12,26 @@
   <div class="container">
     <!-- 左邊：歌庫 -->
     <div class="form-section">
-      <h2>🎼 歌庫清單（每頁10首）</h2>
+      <h2>🎼 歌庫清單</h2>
 
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="搜尋歌曲...">
+        <input type="text" id="searchInput" placeholder="搜尋歌曲/歌手...">
         <button id="searchBtn">搜尋</button>
       </div>
 
-      <div id="songLibrary"></div>
+      <table class="song-table">
+        <thead>
+          <tr>
+            <th>歌名</th>
+            <th>歌手</th>
+            <th>點播次數</th>
+            <th>語言</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="songLibrary"></tbody>
+      </table>
+
       <div class="pagination">
         <button id="prevBtn">⬅️ 上一頁</button>
         <button id="nextBtn">➡️ 下一頁</button>
@@ -53,6 +44,25 @@
       <div id="songList"></div>
     </div>
   </div>
-  <script type="module" src="script.js"></script>
+
+  <!-- Firebase 初始化 + 啟動主程式 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { startApp } from "./script.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlivacWx-Uc0TPsSWQTCl9-2CzdiSzYk8",
+      authDomain: "songlist-ffac3.firebaseapp.com",
+      projectId: "songlist-ffac3",
+      storageBucket: "songlist-ffac3.appspot.com",
+      messagingSenderId: "1071062553304",
+      appId: "1:1071062553304:web:a10849a4a2a88d373cbdad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    startApp(db); // ✅ 初始化應用程式
+  </script>
 </body>
 </html>

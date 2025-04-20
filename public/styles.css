@@ -3,6 +3,7 @@ body {
   background-color: #fff0f6;
   margin: 0;
   padding: 0;
+  color: #6a0572;
 }
 
 header {
@@ -29,64 +30,6 @@ header {
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.song {
-  background-color: #fce7f3;
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  border-left: 6px solid #ff70a6;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.song-info {
-  flex: 1;
-}
-
-.song strong {
-  font-size: 20px;
-  color: #c9184a;
-}
-
-.song button {
-  background-color: #ffafcc;
-  border: none;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-left: 10px;
-  transition: 0.3s;
-}
-
-.song button:hover {
-  background-color: #ff70a6;
-}
-
-.pagination {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 16px;
-  margin: 0 5px;
-  padding: 8px 12px;
-  background-color: #ffafcc;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-}
-
-.pagination button:disabled {
-  background-color: #ffd5e5;
-  cursor: default;
 }
 
 .search-box {
@@ -119,4 +62,81 @@ header {
 
 .search-box button:hover {
   background-color: #ff70a6;
+}
+
+.song-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff0f6;
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Patrick Hand', cursive;
+}
+
+.song-table th, .song-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #ffc8dd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.song-table th {
+  background-color: #ffe5f3;
+  font-weight: bold;
+  color: #c9184a;
+}
+
+.song-table tr:hover {
+  background-color: #fff6fa;
+}
+
+.song-table button {
+  background-color: #ffafcc;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.song-table button:hover {
+  background-color: #ff70a6;
+}
+
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 16px;
+  margin: 0 5px;
+  padding: 8px 12px;
+  background-color: #ffafcc;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+}
+
+.pagination button:disabled {
+  background-color: #ffd5e5;
+  cursor: default;
+}
+
+.picked-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.picked-list div {
+  background-color: #fce7f3;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-left: 6px solid #ff70a6;
+  border-radius: 12px;
 }
